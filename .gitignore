@@ -1,0 +1,60 @@
+# =========================
+# OS & Environment Files
+# =========================
+.DS_Store
+Thumbs.db
+.env
+.env.local
+*.log
+
+# =========================
+# Python (Your Offers Service)
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+env/
+venv/
+ENV/
+.pytest_cache/
+
+# =========================
+# Node.js (Announcements, etc.)
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+
+# =========================
+# Go (Golang)
+# =========================
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+testout*
+
+# =========================
+# Java & Maven / Gradle
+# =========================
+target/
+.gradle/
+build/
+*.class
+*.jar
+*.war
+
+# =========================
+# .NET / C#
+# =========================
+bin/
+obj/
+*.suo
+*.user
