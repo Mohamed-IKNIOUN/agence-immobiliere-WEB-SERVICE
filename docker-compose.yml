@@ -1,0 +1,189 @@
+name: agence-immobiliere
+
+services:
+  # ─────────────────────────────
+  # DATABASES — one per service
+  # ─────────────────────────────
+  announcements-db:
+    image: postgres:16-alpine
+    container_name: announcements-db
+    environment:
+      POSTGRES_DB: ${ANNOUNCEMENTS_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${ANNOUNCEMENTS_DB_PORT}:5432"
+    volumes:
+      - announcements-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${ANNOUNCEMENTS_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - agency-net
+
+  offers-db:
+    image: postgres:16-alpine
+    container_name: offers-db
+    environment:
+      POSTGRES_DB: ${OFFERS_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${OFFERS_DB_PORT}:5432"
+    volumes:
+      - offers-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${OFFERS_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - agency-net
+
+  favourites-db:
+    image: postgres:16-alpine
+    container_name: favourites-db
+    environment:
+      POSTGRES_DB: ${FAVOURITES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${FAVOURITES_DB_PORT}:5432"
+    volumes:
+      - favourites-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${FAVOURITES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - agency-net
+
+  visits-db:
+    image: postgres:16-alpine
+    container_name: visits-db
+    environment:
+      POSTGRES_DB: ${VISITS_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${VISITS_DB_PORT}:5432"
+    volumes:
+      - visits-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${VISITS_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - agency-net
+
+  # ─────────────────────────────
+  # BACKEND SERVICES
+  # (Dockerfiles come later; compose is ready for when they do)
+  # ─────────────────────────────
+
+  announcements-service:
+    build:
+      context: ./announcements-service
+    container_name: announcements-service
+    depends_on:
+      announcements-db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://announcements-db:5432/${ANNOUNCEMENTS_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${ANNOUNCEMENTS_SERVICE_PORT}:8080"
+    networks:
+      - agency-net
+
+  offers-service:
+    build:
+      context: ./offers-service
+    container_name: offers-service
+    depends_on:
+      offers-db:
+        condition: service_healthy
+      announcements-service:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://offers-db:5432/${OFFERS_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      ANNOUNCEMENTS_SERVICE_URL: ${ANNOUNCEMENTS_SERVICE_URL}
+    ports:
+      - "${OFFERS_SERVICE_PORT}:8080"
+    networks:
+      - agency-net
+
+  favourites-service:
+    build:
+      context: ./favourites-service
+    container_name: favourites-service
+    depends_on:
+      favourites-db:
+        condition: service_healthy
+      announcements-service:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@favourites-db:5432/${FAVOURITES_DB}
+      ANNOUNCEMENTS_SERVICE_URL: ${ANNOUNCEMENTS_SERVICE_URL}
+    ports:
+      - "${FAVOURITES_SERVICE_PORT}:8000"
+    networks:
+      - agency-net
+
+  visits-service:
+    build:
+      context: ./visits-service
+    container_name: visits-service
+    depends_on:
+      visits-db:
+        condition: service_healthy
+      announcements-service:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@visits-db:5432/${VISITS_DB}
+      ANNOUNCEMENTS_SERVICE_URL: ${ANNOUNCEMENTS_SERVICE_URL}
+    ports:
+      - "${VISITS_SERVICE_PORT}:8000"
+    networks:
+      - agency-net
+
+  # ─────────────────────────────
+  # FRONTEND
+  # ─────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_ANNOUNCEMENTS_URL: http://localhost:${ANNOUNCEMENTS_SERVICE_PORT}
+        VITE_OFFERS_URL: http://localhost:${OFFERS_SERVICE_PORT}
+        VITE_FAVOURITES_URL: http://localhost:${FAVOURITES_SERVICE_PORT}
+        VITE_VISITS_URL: http://localhost:${VISITS_SERVICE_PORT}
+    container_name: frontend
+    depends_on:
+      - announcements-service
+      - offers-service
+      - favourites-service
+      - visits-service
+    ports:
+      - "${FRONTEND_PORT}:80"
+    networks:
+      - agency-net
+
+volumes:
+  announcements-data:
+  offers-data:
+  favourites-data:
+  visits-data:
+
+networks:
+  agency-net:
+    driver: bridge
