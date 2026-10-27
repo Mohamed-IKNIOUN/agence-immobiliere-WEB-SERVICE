@@ -7,6 +7,31 @@ Thumbs.db
 .env.local
 *.log
 
+.env.*
+!.env.example
+
+# Node
+node_modules/
+dist/
+
+# Java / Maven
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
 # =========================
 # Python (Your Offers Service)
 # =========================
