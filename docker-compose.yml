@@ -149,10 +149,13 @@ services:
       announcements-service:
         condition: service_started
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@visits-db:5432/${VISITS_DB}
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://visits-db:5432/${VISITS_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       ANNOUNCEMENTS_SERVICE_URL: ${ANNOUNCEMENTS_SERVICE_URL}
     ports:
-      - "${VISITS_SERVICE_PORT}:8000"
+      - "${VISITS_SERVICE_PORT}:8084"
     networks:
       - agency-net
 
