@@ -19,7 +19,7 @@ public class VisitController {
     private final VisitService visitService;
 
     @PostMapping
-    public ResponseEntity<VisitResponse> createVisit(@Valid @RequestBody CreateVisitRequest request){
+    public ResponseEntity<VisitResponse> createVisit(@Valid @RequestBody CreateVisitRequest request) {
         VisitResponse createdVisit = visitService.createVisit(request);
         return new ResponseEntity<>(createdVisit, HttpStatus.CREATED);
     }
@@ -34,7 +34,7 @@ public class VisitController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<VisitResponse> getVisitById(@PathVariable Long id){
+    public ResponseEntity<VisitResponse> getVisitById(@PathVariable Long id) {
         VisitResponse visit = visitService.getVisitById(id);
         return ResponseEntity.ok(visit);
     }
@@ -43,13 +43,13 @@ public class VisitController {
     public ResponseEntity<VisitResponse> updateVisitStatus(
             @PathVariable Long id,
             @RequestParam VisitStatus status
-            ) {
+    ) {
         VisitResponse updatedVisit = visitService.updateVisitStatus(id, status);
         return ResponseEntity.ok(updatedVisit);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteVisit(@PathVariable Long id){
+    public ResponseEntity<Void> deleteVisit(@PathVariable Long id) {
         visitService.deleteVisit(id);
         return ResponseEntity.noContent().build();
     }

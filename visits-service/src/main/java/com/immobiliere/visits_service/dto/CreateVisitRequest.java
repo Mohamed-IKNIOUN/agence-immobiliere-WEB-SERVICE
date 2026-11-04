@@ -1,10 +1,12 @@
 package com.immobiliere.visits_service.dto;
 
 import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -17,8 +19,8 @@ public class CreateVisitRequest {
 
     @NotNull(message = "Visit date is required")
     @Future(message = "Visit date must be in the future")
-    private LocalDateTime visitDate;
+    private LocalDate date;
 
-    @Size(max = 500, message = "Notes cannot exceed 500 characters")
-    private String notes;
+    @NotBlank(message = "Visit time is required")
+    private String heure;
 }

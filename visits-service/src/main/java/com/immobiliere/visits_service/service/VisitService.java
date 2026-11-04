@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,32 +21,33 @@ public class VisitService {
     private final VisitRepository visitRepository;
 
     @Transactional
-    public VisitResponse createVisit(CreateVisitRequest request){
-        boolean isConflict = visitRepository.existsByAnnouncementIdAndVisitDateAndStatusNot(
+    public VisitResponse createVisit(CreateVisitRequest request) {
+        boolean isConflict = visitRepository.existsByAnnouncementIdAndDateAndHeureAndStatusNotIn(
                 request.getAnnouncementId(),
-                request.getVisitDate(),
-                VisitStatus.CANCELLED
+                request.getDate(),
+                request.getHeure(),
+                List.of(VisitStatus.ANNULEE, VisitStatus.REFUSEE)
         );
 
-        if(isConflict){
+        if (isConflict) {
             throw new DuplicateVisitException("A visit is already scheduled for this property at this date and time.");
         }
 
         Visit visit = Visit.builder()
                 .announcementId(request.getAnnouncementId())
                 .clientId(request.getClientId())
-                .visitDate(request.getVisitDate())
-                .status(VisitStatus.PENDING)
-                .notes(request.getNotes())
+                .date(request.getDate())
+                .heure(LocalTime.parse(request.getHeure()))
+                .status(VisitStatus.DEMANDEE)
                 .build();
 
         Visit savedVisit = visitRepository.save(visit);
         return mapToResponse(savedVisit);
     }
 
-    public List<VisitResponse> getAllVisits(Long clientId, Long announcementId){
+    public List<VisitResponse> getAllVisits(Long clientId, Long announcementId) {
         List<Visit> visits;
-        if(clientId != null){
+        if (clientId != null) {
             visits = visitRepository.findByClientId(clientId);
         } else if (announcementId != null) {
             visits = visitRepository.findByAnnouncementId(announcementId);
@@ -58,38 +60,42 @@ public class VisitService {
                 .collect(Collectors.toList());
     }
 
-    public VisitResponse getVisitById(Long id){
+    public VisitResponse getVisitById(Long id) {
         Visit visit = visitRepository.findById(id)
-                .orElseThrow(()-> new ResourceNotFoundException("Visit not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Visit not found with id: " + id));
         return mapToResponse(visit);
     }
 
     @Transactional
-    public VisitResponse updateVisitStatus(Long id, VisitStatus status){
+    public VisitResponse updateVisitStatus(Long id, VisitStatus status) {
         Visit visit = visitRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Visit not found with id: " + id));
-        visit.setStatus(status);
+        switch (status) {
+            case CONFIRMEE -> visit.confirmer();
+            case ANNULEE -> visit.annuler();
+            default -> visit.setStatus(status); // Pour REFUSEE ou autres
+        }
         Visit updatedVisit = visitRepository.save(visit);
         return mapToResponse(updatedVisit);
     }
 
     @Transactional
-    public void deleteVisit(Long id){
-        if(!visitRepository.existsById(id)){
+    public void deleteVisit(Long id) {
+        if (!visitRepository.existsById(id)) {
             throw new ResourceNotFoundException("Visit not found with id: " + id);
         }
         visitRepository.deleteById(id);
     }
 
-    private VisitResponse mapToResponse(Visit visit){
+    private VisitResponse mapToResponse(Visit visit) {
         return VisitResponse.builder()
                 .id(visit.getId())
                 .announcementId(visit.getAnnouncementId())
                 .clientId(visit.getClientId())
                 .agentId(visit.getAgentId())
-                .visitDate(visit.getVisitDate())
+                .date(visit.getDate())
+                .heure(String.valueOf(visit.getHeure()))
                 .status(visit.getStatus())
-                .notes(visit.getNotes())
                 .createdAt(visit.getCreatedAt())
                 .build();
     }

@@ -4,6 +4,7 @@ import com.immobiliere.visits_service.entity.VisitStatus;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -13,8 +14,8 @@ public class VisitResponse {
     private Long announcementId;
     private Long clientId;
     private Long agentId;
-    private LocalDateTime visitDate;
+    private LocalDate date;
+    private String heure;
     private VisitStatus status;
-    private String notes;
     private LocalDateTime createdAt;
 }

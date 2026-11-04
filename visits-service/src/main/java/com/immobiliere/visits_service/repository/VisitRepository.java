@@ -5,6 +5,7 @@ import com.immobiliere.visits_service.entity.VisitStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,9 +17,10 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
 
     List<Visit> findByStatus(VisitStatus status);
 
-    boolean existsByAnnouncementIdAndVisitDateAndStatusNot(
+    boolean existsByAnnouncementIdAndDateAndHeureAndStatusNotIn(
             Long announcementId,
-            LocalDateTime visitDate,
-            VisitStatus status
+            LocalDate date,
+            String heure,
+            List<VisitStatus> statuses
     );
 }
