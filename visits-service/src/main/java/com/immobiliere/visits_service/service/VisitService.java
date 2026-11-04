@@ -22,10 +22,12 @@ public class VisitService {
 
     @Transactional
     public VisitResponse createVisit(CreateVisitRequest request) {
-        boolean isConflict = visitRepository.existsByAnnouncementIdAndDateAndHeureAndStatusNotIn(
+        LocalTime visitTime = LocalTime.parse(request.getHeure());
+
+        boolean isConflict = visitRepository.existsConflictingVisit(
                 request.getAnnouncementId(),
                 request.getDate(),
-                request.getHeure(),
+                visitTime,
                 List.of(VisitStatus.ANNULEE, VisitStatus.REFUSEE)
         );
 
@@ -37,7 +39,7 @@ public class VisitService {
                 .announcementId(request.getAnnouncementId())
                 .clientId(request.getClientId())
                 .date(request.getDate())
-                .heure(LocalTime.parse(request.getHeure()))
+                .heure(visitTime)
                 .status(VisitStatus.DEMANDEE)
                 .build();
 
